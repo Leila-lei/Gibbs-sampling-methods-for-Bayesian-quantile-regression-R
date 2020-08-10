@@ -1,0 +1,25 @@
+---
+title: "quantreg"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+# install.packages("quantreg")
+# install.packages("coda")
+library(quantreg)
+library(coda)
+```
+
+rq
+```{r}
+data(engel)
+rq_0.1 = rq(foodexp ~ income, tau = .1, data = engel)
+summary(rq_0.1)
+```
+
+GWS
+```{r}
+
+
+```
+
