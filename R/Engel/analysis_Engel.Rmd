@@ -6,8 +6,10 @@ output: pdf_document
 ```{r setup, include=FALSE}
 library(coda)
 library(quantreg)
+library(mcmcse)
 
 rm(list=ls())
+set.seed(0)
 data(engel)
 ```
 
@@ -20,8 +22,8 @@ d=2
 burn_in = 2000
 
 simulation1 = data.frame("Distribution_Eps"=character(0), "Method"=character(0),
-                         "p"=numeric(), 
-                         "beta1_MCSE"=numeric(), "beta1_IF"=numeric(), "beta1_mu"=numeric(), 
+                         "p"=numeric(),
+                         "beta1_MCSE"=numeric(), "beta1_IF"=numeric(), "beta1_mu"=numeric(),
                          "beta1_sd"=numeric(), "beta1_last"=numeric(),
                          "beta2_MCSE"=numeric(), "beta2_IF"=numeric(), "beta2_mu"=numeric(),
                          "beta2_sd"=numeric(),
@@ -29,47 +31,54 @@ simulation1 = data.frame("Distribution_Eps"=character(0), "Method"=character(0),
 
 ```
 
+\newpage
 Append data
-```{r}
+```{r,fig.height=3.5, fig.width=8}
+par(mfrow=c(2,3))
+setwd('C:\\Users\\juyil\\Dropbox\\Study\\GitHub\\Bayesian-gibbs-sampler\\R')
 for (p in quantiles){
+    rqfit = rq(foodexp ~ income, data = engel, tau = p)
     for (dist_eps in dist_eps_list){
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Engel\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
+        load(paste0("Engel\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
         beta_p = list()
         for (i in 1:d){
           beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          abline(h=summary(rqfit)$coefficients[i],col="red",lwd=3)
         }
-        new_obs = list(dist_eps, "GWS", as.numeric(p), 
-                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
+        new_obs = list(dist_eps, "GWS", as.numeric(p),
+                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])),
                     as.numeric(mean(beta_p[[1]])), as.numeric(sd(beta_p[[1]])),
                     as.numeric(beta_p[[1]][length(beta_p[[1]])]),
                     as.numeric(mcse(beta_p[[2]])$se), as.numeric(length(beta_p[[2]])/effectiveSize(beta_p[[2]])),
                     as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
                     as.numeric(beta_p[[2]][length(beta_p[[2]])]))
         simulation1[nrow(simulation1)+1,] = new_obs
-        
-################################################################   
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Engel\\Gibbs without Scale\\","GWOS_",p,"_",dist_eps,"_betap.RData"))
-        beta_p = list()
-        for (i in 1:d){
-          beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
-        }
-        new_obs = list(dist_eps, "GWOS", as.numeric(p), 
-                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
-                    as.numeric(mean(beta_p[[1]])), as.numeric(sd(beta_p[[1]])),
-                    as.numeric(beta_p[[1]][length(beta_p[[1]])]),
-                    as.numeric(mcse(beta_p[[2]])$se), as.numeric(length(beta_p[[2]])/effectiveSize(beta_p[[2]])),
-                    as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
-                    as.numeric(beta_p[[2]][length(beta_p[[2]])]))
-        simulation1[nrow(simulation1)+1,] = new_obs
-        
+
 ################################################################
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Engel\\Double Exponential Prior\\","DEP_",p,"_",dist_eps,"_betap.RData"))
+        load(paste0("Engel\\Gibbs without Scale\\","GWOS_",p,"_",dist_eps,"_betap.RData"))
         beta_p = list()
         for (i in 1:d){
           beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          abline(h=summary(rqfit)$coefficients[i],col="red",lwd=3)
+        }
+        new_obs = list(dist_eps, "GWOS", as.numeric(p),
+                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])),
+                    as.numeric(mean(beta_p[[1]])), as.numeric(sd(beta_p[[1]])),
+                    as.numeric(beta_p[[1]][length(beta_p[[1]])]),
+                    as.numeric(mcse(beta_p[[2]])$se), as.numeric(length(beta_p[[2]])/effectiveSize(beta_p[[2]])),
+                    as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
+                    as.numeric(beta_p[[2]][length(beta_p[[2]])]))
+        simulation1[nrow(simulation1)+1,] = new_obs
+
+################################################################
+        load(paste0("Engel\\Double Exponential Prior\\","DEP_",p,"_",dist_eps,"_betap.RData"))
+        beta_p = list()
+        for (i in 1:d){
+          beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          abline(h=summary(rqfit)$coefficients[i],col="red",lwd=3)
         }
         new_obs = list(dist_eps, "DEP", as.numeric(p),
                     mcse(beta_p[[1]])$se, length(beta_p[[1]])/effectiveSize(beta_p[[1]]),
@@ -79,46 +88,47 @@ for (p in quantiles){
                     as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
                     as.numeric(beta_p[[2]][length(beta_p[[2]])]))
         simulation1[nrow(simulation1)+1,] = new_obs
-        
+
 ################################################################
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Engel\\Tobit with Scale\\","TWS_",p,"_",dist_eps,"_betap.RData"))
+        load(paste0("Engel\\Tobit with Scale\\","TWS_",p,"_",dist_eps,"_betap.RData"))
         beta_p = list()
         for (i in 1:d){
           beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          abline(h=summary(rqfit)$coefficients[i],col="red",lwd=3)
         }
-        new_obs = list(dist_eps, "TWS", as.numeric(p), 
-                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
+        new_obs = list(dist_eps, "TWS", as.numeric(p),
+                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])),
                     as.numeric(mean(beta_p[[1]])), as.numeric(sd(beta_p[[1]])),
                     as.numeric(beta_p[[1]][length(beta_p[[1]])]),
                     as.numeric(mcse(beta_p[[2]])$se), as.numeric(length(beta_p[[2]])/effectiveSize(beta_p[[2]])),
                     as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
                     as.numeric(beta_p[[2]][length(beta_p[[2]])]))
         simulation1[nrow(simulation1)+1,] = new_obs
-        
+
 ################################################################
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Engel\\Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_betap.RData"))
+        load(paste0("Engel\\Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_betap.RData"))
         beta_p = list()
         for (i in 1:d){
           beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          abline(h=summary(rqfit)$coefficients[i],col="red",lwd=3)
         }
-        new_obs = list(dist_eps, "TWOS", as.numeric(p), 
-                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
+        new_obs = list(dist_eps, "TWOS", as.numeric(p),
+                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])),
                     as.numeric(mean(beta_p[[1]])), as.numeric(sd(beta_p[[1]])),
                     as.numeric(beta_p[[1]][length(beta_p[[1]])]),
                     as.numeric(mcse(beta_p[[2]])$se), as.numeric(length(beta_p[[2]])/effectiveSize(beta_p[[2]])),
                     as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
                     as.numeric(beta_p[[2]][length(beta_p[[2]])]))
         simulation1[nrow(simulation1)+1,] = new_obs
-        
-################################################################
-        
+
     }
 }
 
 ```
 
+\newpage
 Clean
 ```{r}
 ord = c("stdN","heteroN","student")
@@ -135,7 +145,6 @@ quantreg
 ```{r}
 rqfit <- rq(foodexp ~ income, data = engel, tau = quantiles)
 summary(rqfit)
-
 
 ```
 

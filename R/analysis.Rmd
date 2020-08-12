@@ -5,7 +5,9 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 library(coda)
+library(mcmcse)
 rm(list=ls())
+setwd('C:\\Users\\juyil\\Dropbox\\Study\\GitHub\\Bayesian-gibbs-sampler\\R')
 ```
 
 Setup
@@ -26,11 +28,11 @@ Append data
 ```{r}
 for (p in quantiles){
     for (dist_eps in dist_eps_list){
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
+        load(paste0("Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
         beta_p = list()
         for (i in 1:3){
           beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[2001:itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
         }
         new_obs = list(dist_eps, "GWS", as.numeric(p), 
                     as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
@@ -39,11 +41,11 @@ for (p in quantiles){
         simulation1[nrow(simulation1)+1,] = new_obs
         
 ################################################################   
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Gibbs without Scale\\","GWOS_",p,"_",dist_eps,"_betap.RData"))
+        load(paste0("Gibbs without Scale\\","GWOS_",p,"_",dist_eps,"_betap.RData"))
         beta_p = list()
         for (i in 1:3){
           beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[2001:itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
         }
         new_obs = list(dist_eps, "GWOS", as.numeric(p), 
                     as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
@@ -52,11 +54,11 @@ for (p in quantiles){
         simulation1[nrow(simulation1)+1,] = new_obs
         
 ################################################################
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Double Exponential Prior\\","DEP_",p,"_",dist_eps,"_betap.RData"))
+        load(paste0("Double Exponential Prior\\","DEP_",p,"_",dist_eps,"_betap.RData"))
         beta_p = list()
         for (i in 1:3){
           beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[2001:itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
         }
         new_obs = c(dist_eps, "DEP", p,
                     mcse(beta_p[[1]])$se, length(beta_p[[1]])/effectiveSize(beta_p[[1]]),
@@ -65,11 +67,11 @@ for (p in quantiles){
         simulation1[nrow(simulation1)+1,] = new_obs
         
 ################################################################
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Tobit with Scale\\","TWS_",p,"_",dist_eps,"_betap.RData"))
+        load(paste0("Tobit with Scale\\","TWS_",p,"_",dist_eps,"_betap.RData"))
         beta_p = list()
         for (i in 1:3){
           beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[2001:itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
         }
         new_obs = list(dist_eps, "TWS", as.numeric(p), 
                     as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
@@ -78,11 +80,11 @@ for (p in quantiles){
         simulation1[nrow(simulation1)+1,] = new_obs
         
 ################################################################
-        load(paste0("C:\\Users\\juyil\\Documents\\la\\R\\Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_betap.RData"))
+        load(paste0("Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_betap.RData"))
         beta_p = list()
         for (i in 1:3){
           beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[2001:itr_total]
-          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+          plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
         }
         new_obs = list(dist_eps, "TWOS", as.numeric(p), 
                     as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
@@ -97,7 +99,6 @@ for (p in quantiles){
 
 
 
-
 ```
 
 Clean
@@ -107,7 +108,7 @@ simulation1$Distribution_Eps = factor(simulation1$Distribution_Eps,levels=ord)
 simulation1 = simulation1[order(simulation1$Distribution_Eps),]
 is.num <- sapply(simulation1, is.numeric)
 simulation1[is.num] <- lapply(simulation1[is.num], round, 4)
-
+simulation1
 
 ```
 
@@ -116,6 +117,75 @@ simulation1[is.num] <- lapply(simulation1[is.num], round, 4)
 
 
 
+## Time comparison
+Setup
+```{r}
+itr_total = 12000
+quantiles=c(0.1,0.5,0.9)
+dist_eps_list=c("stdN","heteroN","student")
 
+simulation1 = data.frame("Distribution_Eps"=character(0), "Method"=character(0),
+                         "p"=numeric(), t=numeric(), stringsAsFactors=F)
+
+```
+
+
+```{r}
+for (p in quantiles){
+    for (dist_eps in dist_eps_list){
+        load(paste0("Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_t.RData"))
+        beta_p = list()
+        for (i in 1:3){
+          beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[2001:itr_total]
+          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+        }
+        new_obs = list(dist_eps, "GWS", as.numeric(p), t)
+        simulation1[nrow(simulation1)+1,] = new_obs
+        
+################################################################   
+        load(paste0("Gibbs without Scale\\","GWOS_",p,"_",dist_eps,"_t.RData"))
+        beta_p = list()
+        for (i in 1:3){
+          beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[2001:itr_total]
+          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+        }
+        new_obs = list(dist_eps, "GWOS", as.numeric(p), t)
+        simulation1[nrow(simulation1)+1,] = new_obs
+    
+################################################################
+        load(paste0("Tobit with Scale\\","TWS_",p,"_",dist_eps,"_t.RData"))
+        beta_p = list()
+        for (i in 1:3){
+          beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[2001:itr_total]
+          # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+        }
+        new_obs = list(dist_eps, "TWS", as.numeric(p), t)
+        simulation1[nrow(simulation1)+1,] = new_obs
+        
+################################################################
+        # load(paste0("Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_t.RData"))
+        # beta_p = list()
+        # for (i in 1:3){
+        #   beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[2001:itr_total]
+        #   # plot(beta_p[[i]], type="l", main=paste("GWS_",p,"_",dist_eps,"_beta_",i), xlab="itr", ylab=paste("beta",i))
+        # }
+        # new_obs = list(dist_eps, "TWOS", as.numeric(p), t)
+        # simulation1[nrow(simulation1)+1,] = new_obs
+        
+################################################################
+        
+    }
+}
+```
+
+Clean
+```{r}
+ord = c("stdN","heteroN","student")
+simulation1$Distribution_Eps = factor(simulation1$Distribution_Eps,levels=ord)
+simulation1 = simulation1[order(simulation1$Distribution_Eps),]
+is.num <- sapply(simulation1, is.numeric)
+simulation1[is.num] <- lapply(simulation1[is.num], round, 4)
+simulation1
+```
 
 
