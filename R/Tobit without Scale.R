@@ -9,7 +9,8 @@ library(purrr)
 library(coda)
 rm(list=ls())
 set.seed(0)
-source("C:\\Users\\juyil\\Documents\\la\\R\\data_sim1.R")
+setwd('C:\\Users\\juyil\\Dropbox\\Study\\GitHub\\Bayesian-gibbs-sampler\\R')
+source("data_sim1.R")
 
 ## Setup
 quantiles=c(0.1,0.5,0.9)
@@ -72,9 +73,9 @@ for (dist_eps in dist_eps_list){
     }
     t = as.numeric(proc.time()-ptm)[3]
     
-    save(beta_p_record, file=paste0("C:\\Users\\juyil\\Documents\\la\\R\\Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_betap.RData"))
-    save(z_record, file=paste0("C:\\Users\\juyil\\Documents\\la\\R\\Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_z.RData"))
-    save(t, file=paste0("C:\\Users\\juyil\\Documents\\la\\R\\Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_t.RData"))
+    save(beta_p_record, file=paste0("Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_betap.RData"))
+    save(z_record, file=paste0("Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_z.RData"))
+    save(t, file=paste0("Tobit without Scale\\","TWOS_",p,"_",dist_eps,"_t.RData"))
   }
 }
 
