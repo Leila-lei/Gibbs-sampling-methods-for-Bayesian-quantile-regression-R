@@ -1,6 +1,3 @@
-rm(list=ls())
-set.seed(0)
-
 
 generate_data = function(n, d, dist_eps, beta_p){
   x=t(cbind(matrix(rep(1,n),n,1),matrix(rnorm(n*(d-1),0,1),n,d-1)))
