@@ -76,9 +76,9 @@ for (dist_eps in dist_eps_list){
     }
     t = as.numeric(proc.time()-ptm)[3]
     
-    save(beta_p_record, file=paste0("C:\\Users\\juyil\\Documents\\la\\R\\mtcars\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
-    save(v_record, file=paste0("C:\\Users\\juyil\\Documents\\la\\R\\mtcars\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_v.RData"))
-    save(t, file=paste0("C:\\Users\\juyil\\Documents\\la\\R\\mtcars\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_t.RData"))
+    save(beta_p_record, file=paste0("Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
+    save(v_record, file=paste0("Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_v.RData"))
+    save(t, file=paste0("Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_t.RData"))
   }
 }
 

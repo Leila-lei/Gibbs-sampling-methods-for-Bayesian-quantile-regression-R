@@ -7,27 +7,31 @@ library(matrixNormal)
 library(GeneralizedHyperbolic)
 library(mcmcse)
 library(invgamma)
+library(quantreg)
 rm(list=ls())
+setwd("C:\\Users\\juyil\\Dropbox\\Study\\GitHub\\Bayesian-gibbs-sampler\\R\\mtcars\\logged data")
 set.seed(0)
-setwd("C:\\Users\\juyil\\Dropbox\\Study\\GitHub\\Bayesian-gibbs-sampler\\R")
-source("data_sim1.R")
+data(mtcars)
+mtcars = mtcars[c(1,2,5,8)]
+## Log transform
+mtcars[2:3] = log(mtcars[2:3])
 
 ## Setup
+# quantiles=c(0.5)
 quantiles=c(0.1,0.5,0.9)
-dist_eps_list=c("stdN","heteroN","student")  ## heteroN requires d>=3
+dist_eps_list=c("stdN")  ## heteroN requires d>=3
 # dist_eps_list=c("stdN","student")
-itr_total = 12
-n=100 
-d=3 #dimension of x
-beta_p=matrix(c(1,1,1))
+itr_total = 12000
+n=nrow(mtcars) 
+d=ncol(mtcars) #dimension of x
 n0=3
 s0=0.1
 
 for (dist_eps in dist_eps_list){
   for (p in quantiles){
-    ## Generate Data
-    data = generate_data(n=n, d=d, dist_eps=dist_eps, beta_p=beta_p)
-    x = data[[1]]; y=data[[2]]
+    ## Import Data
+    x = t(cbind(matrix(rep(1,n),n,1),matrix(mtcars$cyl,n,1),matrix(mtcars$drat,n,1),matrix(mtcars$vs,n,1)))
+    y = matrix(mtcars$mpg)
     
     sigma=rinvgamma(1,n0/2,s0/2)
     u=rnorm(n,0,1)
@@ -49,7 +53,7 @@ for (dist_eps in dist_eps_list){
       ## B_p_hat
       B_p_hat = solve(B_p0)
       for (i in 1:n){
-        B_p_hat = B_p_hat + (x[,i]%*%t(x[,i]) / (tau2*sigma*v[i]))
+        B_p_hat = B_p_hat + (matrix(x[,i])%*%t(x[,i]) / (tau2*sigma*v[i]))
       }
       B_p_hat = solve(B_p_hat)
       
@@ -75,8 +79,9 @@ for (dist_eps in dist_eps_list){
     }
     t = as.numeric(proc.time()-ptm)[3]
     
-    save(beta_p_record, file=paste0("C:\\Users\\juyil\\Documents\\la\\R\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
-    save(v_record, file=paste0("C:\\Users\\juyil\\Documents\\la\\R\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_v.RData"))
-    save(t, file=paste0("C:\\Users\\juyil\\Documents\\la\\R\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_t.RData"))
+    save(beta_p_record, file=paste0("Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
+    save(v_record, file=paste0("Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_v.RData"))
+    save(t, file=paste0("Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_t.RData"))
   }
 }
+
