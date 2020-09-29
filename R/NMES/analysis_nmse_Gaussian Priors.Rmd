@@ -1,0 +1,216 @@
+---
+title: "Beta_p estimations vs rq() coefficients on NMES1988"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+library(coda)
+library(quantreg)
+library(mcmcse)
+library(knitr)
+
+set.seed(0)
+knitr::opts_knit$set(root.dir = "C:\\Users\\juyil\\Dropbox\\Study\\GitHub\\Bayesian-gibbs-sampler\\R")
+library(AER)
+data("NMES1988")
+
+```
+
+```{r}
+response = NMES1988[,1]   # Number of physician office visits.
+dat = NMES1988[c(8,11,15,16)] # Remove the responses
+
+# Center and scale the continuous predictors:
+# dat[c(2,4)]= scale(dat[c(2,4)])
+```
+
+```{r, echo=FALSE}
+## Setup
+itr_total = 1200
+quantiles=c(0.1, 0.5, 0.9)
+dist_eps_list=c("stdN")
+d=4+1
+burn_in=200
+
+simulation1 = data.frame("Distribution_Eps"=character(0), "Method"=character(0),
+                         "p"=numeric(), 
+                         "beta1_MCSE"=numeric(),
+                         "beta2_MCSE"=numeric(), 
+                         "beta3_MCSE"=numeric(), 
+                         "beta4_MCSE"=numeric(), 
+                         "beta5_MCSE"=numeric(), stringsAsFactors=F)
+
+```
+
+## NMES1988 Dataset
+The data was sourced from US National Medical Expenditure Survey [NMES] data for 1987/88. Available as NMES1988 in package AER (Kleiber and Zeileis 2008). Originally taken from Deb and Trivedi (J. Applied Econometrics 1997)
+```{r}
+head(NMES1988)
+```
+
+## Model: visits ~ chronic+age+school+income
+
+## Quantreg
+```{r}
+rqfit <- rq(visits ~ chronic+age+school+income, data = NMES1988, tau = quantiles)
+summary(rqfit)
+```
+
+\newpage
+
+## Beta_p estimations vs rq() coefficients
+
+The plot titles are formatted as (sampling method)_(quantile)_(error distribution)_(beta_p). The histograms are the beta_p estimations yielded by the paper's model. The red horizontal line reflects rq() beta coefficients. The absence of red lines in some plots reflects big difference in our beta_p estimations and the rq() results.
+
+## Notations:
+GWS: Gibbs sampler of the asymmetric Laplace distribution (ALD) with Scale parameter\newline
+GWOS: Gibbs sampler of the asymmetric Laplace distribution (ALD) without Scale parameter\newline
+stdN: Standard Normal Prior\newline
+beta_1: Intercept\newline
+beta_2: Regression coefficient associated with chronic\newline
+beta_3: Regression coefficient associated with age\newline
+beta_4: Regression coefficient associated with school\newline
+beta_5: Regression coefficient associated with income
+
+
+## Histograms
+```{r,fig.height=3.5, fig.width=8， warning=FALSE, echo=FALSE}
+par(mfrow=c(1,5))
+# setwd('C:\\Users\\juyil\\Dropbox\\Study\\GitHub\\Bayesian-gibbs-sampler\\R')
+for (p in quantiles){
+    rqfit = rq(mpg ~ cyl+drat+vs, data = mtcars, tau = p)
+    for (dist_eps in dist_eps_list){
+        load(paste0("NMES\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
+        beta_p = list()
+        for (i in 1:d){
+          beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
+          hist(beta_p[[i]], main=paste("GWS_",p,"_",dist_eps,"\n_beta_",i), xlab=paste("beta",i),
+               xlim=c(min(min(beta_p[[i]]),summary(rqfit)$coefficients[i]),max(max(beta_p[[i]]),summary(rqfit)$coefficients[i])))
+          abline(v=summary(rqfit)$coefficients[i],col="red",lwd=3)
+        }
+        new_obs = list(dist_eps, "GWS", as.numeric(p), 
+                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
+                    as.numeric(mean(beta_p[[1]])), as.numeric(sd(beta_p[[1]])),
+                    as.numeric(beta_p[[1]][length(beta_p[[1]])]),
+                    as.numeric(mcse(beta_p[[2]])$se), as.numeric(length(beta_p[[2]])/effectiveSize(beta_p[[2]])),
+                    as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
+                    as.numeric(beta_p[[2]][length(beta_p[[2]])]),
+                    as.numeric(mcse(beta_p[[3]])$se), as.numeric(length(beta_p[[3]])/effectiveSize(beta_p[[3]])), 
+                    as.numeric(mean(beta_p[[3]])), as.numeric(sd(beta_p[[3]])),
+                    as.numeric(beta_p[[3]][length(beta_p[[3]])]),
+                    as.numeric(mcse(beta_p[[4]])$se), as.numeric(length(beta_p[[4]])/effectiveSize(beta_p[[4]])), 
+                    as.numeric(mean(beta_p[[4]])), as.numeric(sd(beta_p[[4]])),
+                    as.numeric(beta_p[[4]][length(beta_p[[4]])]),
+                    as.numeric(mcse(beta_p[[5]])$se), as.numeric(length(beta_p[[5]])/effectiveSize(beta_p[[5]])), 
+                    as.numeric(mean(beta_p[[5]])), as.numeric(sd(beta_p[[5]])),
+                    as.numeric(beta_p[[5]][length(beta_p[[5]])]))
+        simulation1[nrow(simulation1)+1,] = new_obs
+        
+################################################################   
+        load(paste0("NMES\\Gibbs without Scale\\","GWOS_",p,"_",dist_eps,"_betap.RData"))
+        beta_p = list()
+        for (i in 1:d){
+          beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
+          hist(beta_p[[i]],  main=paste("GWOS_",p,"_",dist_eps,"\n_beta_",i), xlab=paste("beta",i),
+               xlim=c(min(min(beta_p[[i]]),summary(rqfit)$coefficients[i]),max(max(beta_p[[i]]),summary(rqfit)$coefficients[i])))
+          abline(v=summary(rqfit)$coefficients[i],col="red",lwd=3)
+        }
+        new_obs = list(dist_eps, "GWOS", as.numeric(p), 
+                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
+                    as.numeric(mean(beta_p[[1]])), as.numeric(sd(beta_p[[1]])),
+                    as.numeric(beta_p[[1]][length(beta_p[[1]])]),
+                    as.numeric(mcse(beta_p[[2]])$se), as.numeric(length(beta_p[[2]])/effectiveSize(beta_p[[2]])),
+                    as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
+                    as.numeric(beta_p[[2]][length(beta_p[[2]])]),
+                    as.numeric(mcse(beta_p[[3]])$se), as.numeric(length(beta_p[[3]])/effectiveSize(beta_p[[3]])), 
+                    as.numeric(mean(beta_p[[3]])), as.numeric(sd(beta_p[[3]])),
+                    as.numeric(beta_p[[3]][length(beta_p[[3]])]),
+                    as.numeric(mcse(beta_p[[4]])$se), as.numeric(length(beta_p[[4]])/effectiveSize(beta_p[[4]])), 
+                    as.numeric(mean(beta_p[[4]])), as.numeric(sd(beta_p[[4]])),
+                    as.numeric(beta_p[[4]][length(beta_p[[4]])]),
+                    as.numeric(mcse(beta_p[[5]])$se), as.numeric(length(beta_p[[5]])/effectiveSize(beta_p[[5]])), 
+                    as.numeric(mean(beta_p[[5]])), as.numeric(sd(beta_p[[5]])),
+                    as.numeric(beta_p[[5]][length(beta_p[[5]])]))
+        simulation1[nrow(simulation1)+1,] = new_obs
+    }
+}
+
+```
+
+
+## Traceplots
+
+```{r,fig.height=3.5, fig.width=8， warning=FALSE, echo=FALSE}
+par(mfrow=c(1,5))
+# setwd('C:\\Users\\juyil\\Dropbox\\Study\\GitHub\\Bayesian-gibbs-sampler\\R')
+for (p in quantiles){
+    rqfit = rq(mpg ~ cyl+drat+vs, data = mtcars, tau = p)
+    for (dist_eps in dist_eps_list){
+        load(paste0("NMES\\Gibbs with Scale\\","GWS_",p,"_",dist_eps,"_betap.RData"))
+        beta_p = list()
+        for (i in 1:d){
+          beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
+          plot(beta_p[[i]],type="l", main=paste("GWS_",p,"_",dist_eps,"\n_beta_",i), xlab=paste("beta",i),
+               ylim=c(min(min(beta_p[[i]]),summary(rqfit)$coefficients[i]),max(max(beta_p[[i]]),summary(rqfit)$coefficients[i])))
+          abline(h=summary(rqfit)$coefficients[i],col="red",lwd=3)
+        }
+        new_obs = list(dist_eps, "GWS", as.numeric(p), 
+                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
+                    as.numeric(mean(beta_p[[1]])), as.numeric(sd(beta_p[[1]])),
+                    as.numeric(beta_p[[1]][length(beta_p[[1]])]),
+                    as.numeric(mcse(beta_p[[2]])$se), as.numeric(length(beta_p[[2]])/effectiveSize(beta_p[[2]])),
+                    as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
+                    as.numeric(beta_p[[2]][length(beta_p[[2]])]),
+                    as.numeric(mcse(beta_p[[3]])$se), as.numeric(length(beta_p[[3]])/effectiveSize(beta_p[[3]])), 
+                    as.numeric(mean(beta_p[[3]])), as.numeric(sd(beta_p[[3]])),
+                    as.numeric(beta_p[[3]][length(beta_p[[3]])]),
+                    as.numeric(mcse(beta_p[[4]])$se), as.numeric(length(beta_p[[4]])/effectiveSize(beta_p[[4]])), 
+                    as.numeric(mean(beta_p[[4]])), as.numeric(sd(beta_p[[4]])),
+                    as.numeric(beta_p[[4]][length(beta_p[[4]])]),
+                    as.numeric(mcse(beta_p[[5]])$se), as.numeric(length(beta_p[[5]])/effectiveSize(beta_p[[5]])), 
+                    as.numeric(mean(beta_p[[5]])), as.numeric(sd(beta_p[[5]])),
+                    as.numeric(beta_p[[5]][length(beta_p[[5]])]))
+        simulation1[nrow(simulation1)+1,] = new_obs
+        
+################################################################   
+        load(paste0("NMES\\Gibbs without Scale\\","GWOS_",p,"_",dist_eps,"_betap.RData"))
+        beta_p = list()
+        for (i in 1:d){
+          beta_p[[i]]=unlist(lapply(beta_p_record, function(x){return(x[i,])}))[(burn_in+1):itr_total]
+          plot(beta_p[[i]],type="l",  main=paste("GWOS_",p,"_",dist_eps,"\n_beta_",i), xlab=paste("beta",i),
+               ylim=c(min(min(beta_p[[i]]),summary(rqfit)$coefficients[i]),max(max(beta_p[[i]]),summary(rqfit)$coefficients[i])))
+          abline(h=summary(rqfit)$coefficients[i],col="red",lwd=3)
+        }
+        new_obs = list(dist_eps, "GWOS", as.numeric(p), 
+                    as.numeric(mcse(beta_p[[1]])$se), as.numeric(length(beta_p[[1]])/effectiveSize(beta_p[[1]])), 
+                    as.numeric(mean(beta_p[[1]])), as.numeric(sd(beta_p[[1]])),
+                    as.numeric(beta_p[[1]][length(beta_p[[1]])]),
+                    as.numeric(mcse(beta_p[[2]])$se), as.numeric(length(beta_p[[2]])/effectiveSize(beta_p[[2]])),
+                    as.numeric(mean(beta_p[[2]])), as.numeric(sd(beta_p[[2]])),
+                    as.numeric(beta_p[[2]][length(beta_p[[2]])]),
+                    as.numeric(mcse(beta_p[[3]])$se), as.numeric(length(beta_p[[3]])/effectiveSize(beta_p[[3]])), 
+                    as.numeric(mean(beta_p[[3]])), as.numeric(sd(beta_p[[3]])),
+                    as.numeric(beta_p[[3]][length(beta_p[[3]])]),
+                    as.numeric(mcse(beta_p[[4]])$se), as.numeric(length(beta_p[[4]])/effectiveSize(beta_p[[4]])), 
+                    as.numeric(mean(beta_p[[4]])), as.numeric(sd(beta_p[[4]])),
+                    as.numeric(beta_p[[4]][length(beta_p[[4]])]),
+                    as.numeric(mcse(beta_p[[5]])$se), as.numeric(length(beta_p[[5]])/effectiveSize(beta_p[[5]])), 
+                    as.numeric(mean(beta_p[[5]])), as.numeric(sd(beta_p[[5]])),
+                    as.numeric(beta_p[[5]][length(beta_p[[5]])]))
+        simulation1[nrow(simulation1)+1,] = new_obs
+    }
+}
+
+```
+
+```{r,include=FALSE}
+# ord = c("stdN","heteroN","student")
+# simulation1$Distribution_Eps = factor(simulation1$Distribution_Eps,levels=ord)
+# simulation1 = simulation1[order(simulation1$Distribution_Eps),]
+# is.num <- sapply(simulation1, is.numeric)
+# simulation1[is.num] <- lapply(simulation1[is.num], round, 4)
+# simulation1
+
+```
+
